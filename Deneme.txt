@@ -19,9 +19,9 @@ local window = library:AddWindow("Deneme -1|| HELLO - ".. displayName, {
     can_resize = true 
 })
 
-local Farm = windowAddTab:("Farm")
-
-Farm:AddLabel("Auto Farm")
-Farm:AddButton("Discord link", function()
+local credits = window:AddTab("Credits")
+credits:AddLabel("🤙🏻 ByYusuf Deneme")
+credits:AddLabel("👇 My Discord Server")
+credits:AddButton("Discord Link", function()
    setclipboard("https://discord.gg/DbAU5Z6HPd")
 end)
