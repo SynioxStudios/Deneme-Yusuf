@@ -20,8 +20,8 @@ local window = library:AddWindow("Deneme -1|| HELLO - ".. displayName, {
 })
 
 local Farm = windowAddTab:("Farm")
-Farm:AddLabel("Auto Farm")
 
+Farm:AddLabel("Auto Farm")
 Farm:AddButton("Discord link", function()
    setclipboard("https://discord.gg/DbAU5Z6HPd")
 end)
