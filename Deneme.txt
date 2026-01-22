@@ -22,4 +22,4 @@ local window = library:AddWindow("Deneme -1|| HELLO - ".. displayName, {
 local Farm = windowAddTab:("Farm")
 Farm:AddLabel("Auto Farm")
 
-Farm:AddSwitch("Auto Weight", function(state)
+Farm:AddSwitch("Auto Weight")
