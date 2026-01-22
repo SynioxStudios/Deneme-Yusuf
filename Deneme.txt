@@ -1,0 +1,25 @@
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/SynioxStudios/ByYusufGui-Syniox/refs/heads/main/SynioxGui.lua%20(3).txt", true))()
+local displayName = game.Players.LocalPlayer.DisplayName
+
+local window = library:AddWindow("Deneme -1|| HELLO - ".. displayName, {
+    title_bar = {
+        Color3.fromRGB(160, 0, 0), 
+        Color3.fromRGB(40, 0, 0),  
+        Color3.fromRGB(0, 0, 0)    
+    }, 
+    title_bar_transparency = 0.1, 
+    background = {
+        Color3.fromRGB(0, 0, 0), 
+        Color3.fromRGB(10, 10, 10), 
+        Color3.fromRGB(20, 20, 20)
+    }, 
+    background_transparency = 0.1, 
+    main_color = Color3.fromRGB(160, 0, 0), 
+    min_size = Vector2.new(400, 450), 
+    can_resize = true 
+})
+
+local Farm = windowAddTab:("Farm")
+Farm:AddLabel("Auto Farm")
+
+Farm:AddSwitch("Auto Weight", function(state)
