@@ -23,28 +23,10 @@ local tabFarming = window:AddTab("Pack Farm")
 
 local player = game.Players.LocalPlayer
 local muscleEvent = player:WaitForChild("muscleEvent")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VIM = game:GetService("VirtualInputManager")
-local runFastRep = false
+local isRunning = false
 local autoEatEnabled = false
-local fastRebirth = false
-
-local function getPing()
-    local stats = game:GetService("Stats")
-    local pingStat = stats:FindFirstChild("PerformanceStats") and stats.PerformanceStats:FindFirstChild("Ping")
-    return pingStat and pingStat:GetValue() or 0
-end
-
-local function fastRepLoop()
-    while runFastRep do
-        if muscleEvent then
-            for i = 1, 3 do
-                muscleEvent:FireServer("rep")
-            end
-        end
-        task.wait(0.25)
-        if getPing() >= 150 then task.wait(0.5) end
-    end
-end
 
 local function pressE()
     VIM:SendKeyEvent(true, "E", false, game)
@@ -53,41 +35,104 @@ local function pressE()
 end
 
 local function unequipAllPets()
+    if not player:FindFirstChild("petsFolder") then return end
     for _, folder in pairs(player.petsFolder:GetChildren()) do
         if folder:IsA("Folder") then
             for _, pet in pairs(folder:GetChildren()) do
-                game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipPet", pet)
+                ReplicatedStorage.rEvents.equipPetEvent:FireServer("unequipPet", pet)
             end
         end
     end
-    task.wait(0.1)
 end
 
-local function equipPetByName(name)
+local function equipUniquePet(name)
     unequipAllPets()
-    task.wait(0.01)
-    for _, pet in pairs(player.petsFolder.Unique:GetChildren()) do
-        if pet.Name == name then
-            game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", pet)
+    task.wait(0.1)
+    if player.petsFolder:FindFirstChild("Unique") then
+        for _, pet in pairs(player.petsFolder.Unique:GetChildren()) do
+            if pet.Name == name then
+                ReplicatedStorage.rEvents.equipPetEvent:FireServer("equipPet", pet)
+                break
+            end
         end
     end
+end
+
+local function findMachine(machineName)
+    local machine = workspace:FindFirstChild("machinesFolder") and workspace.machinesFolder:FindFirstChild(machineName)
+    if not machine then
+        for _, f in pairs(workspace:GetChildren()) do
+            if f:IsA("Folder") and f.Name:find("machines") then
+                machine = f:FindFirstChild(machineName)
+                if machine then break end
+            end
+        end
+    end
+    return machine
 end
 
 tabFarming:AddLabel("Fast Farming").TextSize = 23
 
-tabFarming:AddSwitch("Fast Strength (12 CPS)", function(state)
-    runFastRep = state
-    if runFastRep then task.spawn(fastRepLoop) end
+tabFarming:AddSwitch("Pack Farm (3600-4000 CPS)", function(bool)
+    isRunning = bool
+    if isRunning then
+        task.spawn(function()
+            while isRunning do
+                local currentRebirths = player.leaderstats.Rebirths.Value
+                local rebirthCost = 10000 + (5000 * currentRebirths)
+                
+                if player:FindFirstChild("ultimatesFolder") and player.ultimatesFolder:FindFirstChild("Golden Rebirth") then
+                    local goldenRebirths = player.ultimatesFolder["Golden Rebirth"].Value
+                    rebirthCost = math.floor(rebirthCost * (1 - (goldenRebirths * 0.1)))
+                end
+
+                equipUniquePet("Swift Samurai")
+                
+                for t = 1, 10 do
+                    task.spawn(function()
+                        while isRunning and player.leaderstats.Strength.Value < rebirthCost do
+                            for i = 1, 6 do 
+                                player.muscleEvent:FireServer("rep")
+                            end
+                            task.wait()
+                        end
+                    end)
+                end
+
+                while isRunning and player.leaderstats.Strength.Value < rebirthCost do
+                    task.wait(0.5)
+                end
+
+                if not isRunning then break end
+
+                equipUniquePet("Tribal Overlord")
+                task.wait(0.2)
+
+                local machine = findMachine("Jungle Bar Lift")
+                if machine and machine:FindFirstChild("interactSeat") then
+                    player.Character.HumanoidRootPart.CFrame = machine.interactSeat.CFrame * CFrame.new(0, 3, 0)
+                    repeat
+                        task.wait(0.1)
+                        pressE()
+                    until player.Character.Humanoid.Sit or not isRunning
+                end
+
+                local initialRebirths = player.leaderstats.Rebirths.Value
+                repeat
+                    ReplicatedStorage.rEvents.rebirthRemote:InvokeServer("rebirthRequest")
+                    task.wait(0.1)
+                until player.leaderstats.Rebirths.Value > initialRebirths or not isRunning
+
+                task.wait()
+            end
+        end)
+    end
 end)
 
-tabFarming:AddLabel("Fast Rebirths").TextSize = 23
-
+tabFarming:AddLabel("Stats & Info").TextSize = 23
 local footerTimeLabel = tabFarming:AddLabel("0d 0h 0m 0s")
 local footerRebirthsLabel = tabFarming:AddLabel("Rebirths: 0")
-local footerRebirthsGainedLabel = tabFarming:AddLabel("Rebirths Gained: 0")
-
 local startTime = tick()
-local initialRebirths = player:WaitForChild("leaderstats"):WaitForChild("Rebirths").Value
 
 task.spawn(function()
     while true do
@@ -97,92 +142,22 @@ task.spawn(function()
         local m = math.floor((elapsed % 3600) / 60)
         local s = math.floor(elapsed % 60)
         footerTimeLabel.Text = string.format("%dd %dh %dm %ds", d, h, m, s)
+        footerRebirthsLabel.Text = "Rebirths: " .. (player.leaderstats:FindFirstChild("Rebirths") and player.leaderstats.Rebirths.Value or 0)
         task.wait(1)
     end
 end)
 
-local function updateRebirths()
-    local current = player.leaderstats.Rebirths.Value
-    local gained = current - initialRebirths
-    footerRebirthsLabel.Text = "Rebirths: " .. current
-    footerRebirthsGainedLabel.Text = "Rebirths Gained: " .. gained
-end
-player.leaderstats.Rebirths.Changed:Connect(updateRebirths)
+tabFarming:AddLabel("Settings").TextSize = 23
 
-tabFarming:AddSwitch("Auto Fast Rebirth", function(bool)
-    fastRebirth = bool
-    if fastRebirth then
-        task.spawn(function()
-            local rs = game:GetService("ReplicatedStorage")
-            while fastRebirth do
-                local reb = player.leaderstats.Rebirths.Value
-                local neededStr = 10000 + (5000 * reb)
-                if player.ultimatesFolder:FindFirstChild("Golden Rebirth") then
-                    neededStr = math.floor(neededStr * (1 - (player.ultimatesFolder["Golden Rebirth"].Value * 0.1)))
-                end
-                
-                equipPetByName("Swift Samurai")
-                while player.leaderstats.Strength.Value < neededStr and fastRebirth do
-                    for _ = 1, 10 do player.muscleEvent:FireServer("rep") end
-                    task.wait()
-                end
-                
-                equipPetByName("Tribal Overlord")
-                local machine = workspace.machinesFolder:FindFirstChild("Jungle Bar Lift")
-                if machine and machine:FindFirstChild("interactSeat") then
-                    player.Character.HumanoidRootPart.CFrame = machine.interactSeat.CFrame * CFrame.new(0, 3, 0)
-                    repeat task.wait(0.1) pressE() until player.Character.Humanoid.Sit or not fastRebirth
-                end
-                
-                local before = player.leaderstats.Rebirths.Value
-                repeat rs.rEvents.rebirthRemote:InvokeServer("rebirthRequest") task.wait(0.1) until player.leaderstats.Rebirths.Value > before or not fastRebirth
-            end
-        end)
-    end
-end)
-
-tabFarming:AddLabel("Complements").TextSize = 23
-
-tabFarming:AddSwitch("Jungle Lift", function(bool)
-    getgenv().working = bool
-    if bool then
-        local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = CFrame.new(-8666, 34, 2070)
-            task.wait(0.1)
-            pressE()
-            task.spawn(function()
-                while getgenv().working do
-                    player.muscleEvent:FireServer("rep")
-                    task.wait()
-                end
-            end)
-        end
-    end
-end)
-
-tabFarming:AddSwitch("Lock Position", function(Value)
-    if Value then
-        local currentPos = player.Character.HumanoidRootPart.CFrame
-        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function()
-            if player.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.CFrame = currentPos
-            end
-        end)
-    else
-        if getgenv().posLock then getgenv().posLock:Disconnect() getgenv().posLock = nil end
-    end
-end)
-
-tabFarming:AddSwitch("Auto Eat Egg 30 Min", function(state)
+tabFarming:AddSwitch("Auto Eat Protein Egg", function(state)
     autoEatEnabled = state
 end)
 
 task.spawn(function()
     while true do
         if autoEatEnabled then
-            local bp = player:WaitForChild("Backpack")
-            local egg = bp:FindFirstChild("Protein Egg")
+            local bp = player:FindFirstChild("Backpack")
+            local egg = bp and bp:FindFirstChild("Protein Egg")
             if egg then
                 egg.Parent = player.Character
                 pcall(function() egg:Activate() end)
@@ -201,11 +176,5 @@ tabFarming:AddButton("Full Optimization", function()
     game:GetService("Lighting").Brightness = 0
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("ParticleEmitter") or obj:IsA("Light") then obj:Destroy() end
-    end
-end)
-
-tabFarming:AddSwitch("Hide All Frames", function(bool)
-    for _, obj in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
-        if obj.Name:match("Frame$") then obj.Visible = not bool end
     end
 end)
