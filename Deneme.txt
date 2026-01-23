@@ -25,6 +25,7 @@ local player = game.Players.LocalPlayer
 local muscleEvent = player:WaitForChild("muscleEvent")
 local rEvents = game:GetService("ReplicatedStorage"):WaitForChild("rEvents")
 local isRunning = false
+local strengthOnly = false
 local autoEatEnabled = false
 local startTime = tick()
 local initialRebirthsCount = player.leaderstats.Rebirths.Value
@@ -88,9 +89,9 @@ task.spawn(function()
     end
 end)
 
-tabFarming:AddLabel("Farming Controls").TextSize = 23
+tabFarming:AddLabel("Pack Farm (Rebirth Mode)").TextSize = 23
 
-tabFarming:AddSwitch("Pack Farm (Auto Rebirth)", function(bool)
+tabFarming:AddSwitch("Auto Rebirth Farm", function(bool)
     isRunning = bool
     if not bool then return end
     task.spawn(function()
@@ -129,6 +130,24 @@ tabFarming:AddSwitch("Pack Farm (Auto Rebirth)", function(bool)
                 rEvents.rebirthRemote:InvokeServer("rebirthRequest")
                 task.wait(0.5)
             until player.leaderstats.Rebirths.Value > initialRebirths or not isRunning
+        end
+    end)
+end)
+
+tabFarming:AddLabel("Fast Strength (Power Mode)").TextSize = 23
+
+tabFarming:AddSwitch("Auto Strength Farm", function(bool)
+    strengthOnly = bool
+    if not bool then return end
+    task.spawn(function()
+        unequipAllPets()
+        task.wait(0.1)
+        equipUniquePet("Swift Samurai")
+        while strengthOnly do
+            for i = 1, 12 do 
+                muscleEvent:FireServer("rep")
+            end
+            task.wait()
         end
     end)
 end)
