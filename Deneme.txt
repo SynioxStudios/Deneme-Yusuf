@@ -25,6 +25,7 @@ local player = game.Players.LocalPlayer
 local muscleEvent = player:WaitForChild("muscleEvent")
 local rEvents = game:GetService("ReplicatedStorage"):WaitForChild("rEvents")
 local isRunning = false
+local autoEatEnabled = false
 local startTime = tick()
 local initialRebirthsCount = player.leaderstats.Rebirths.Value
 
@@ -80,7 +81,6 @@ task.spawn(function()
         local minutes = math.floor((elapsed % 3600) / 60)
         local seconds = math.floor(elapsed % 60)
         footerTimeLabel.Text = string.format("Time: %dd %dh %dm %ds", days, hours, minutes, seconds)
-        
         local current = player.leaderstats.Rebirths.Value
         footerRebirthsLabel.Text = "Total Rebirths: " .. current
         footerRebirthsGainedLabel.Text = "Rebirths Gained: " .. (current - initialRebirthsCount)
@@ -93,34 +93,27 @@ tabFarming:AddLabel("Farming Controls").TextSize = 23
 tabFarming:AddSwitch("Pack Farm (Auto Rebirth)", function(bool)
     isRunning = bool
     if not bool then return end
-
     task.spawn(function()
         while isRunning do
             local currentReb = player.leaderstats.Rebirths.Value
             local rebirthCost = 10000 + (5000 * currentReb)
-            
             if player.ultimatesFolder:FindFirstChild("Golden Rebirth") then
                 local gReb = player.ultimatesFolder["Golden Rebirth"].Value
                 rebirthCost = math.floor(rebirthCost * (1 - (gReb * 0.1)))
             end
-
             unequipAllPets()
             task.wait(0.1)
             equipUniquePet("Swift Samurai")
-            
             while isRunning and player.leaderstats.Strength.Value < rebirthCost do
                 for i = 1, 12 do 
                     muscleEvent:FireServer("rep")
                 end
                 task.wait()
             end
-
             if not isRunning then break end
-
             unequipAllPets()
             task.wait(0.1)
             equipUniquePet("Tribal Overlord")
-
             local machine = findMachine("Jungle Bar Lift")
             if machine and machine:FindFirstChild("interactSeat") then
                 player.Character.HumanoidRootPart.CFrame = machine.interactSeat.CFrame * CFrame.new(0, 3, 0)
@@ -131,7 +124,6 @@ tabFarming:AddSwitch("Pack Farm (Auto Rebirth)", function(bool)
                     retryCount = retryCount + 1
                 until (player.Character and player.Character.Humanoid.Sit) or retryCount > 20 or not isRunning
             end
-
             local initialRebirths = player.leaderstats.Rebirths.Value
             repeat
                 rEvents.rebirthRemote:InvokeServer("rebirthRequest")
@@ -141,7 +133,75 @@ tabFarming:AddSwitch("Pack Farm (Auto Rebirth)", function(bool)
     end)
 end)
 
-tabFarming:AddLabel("Performance & Visuals").TextSize = 23
+tabFarming:AddButton("Teleport & Sit Jungle Lift", function()
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = CFrame.new(-8666, 34, 2070)
+        task.wait(0.5)
+        local machine = findMachine("Jungle Bar Lift")
+        if machine and machine:FindFirstChild("interactSeat") then
+            local retryCount = 0
+            repeat
+                task.wait(0.2)
+                pressE()
+                retryCount = retryCount + 1
+            until (player.Character and player.Character.Humanoid.Sit) or retryCount > 10
+        end
+    end
+end)
+
+tabFarming:AddButton("Teleport & Sit Auto Squat", function()
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = CFrame.new(-8377.55, 48.71, 2864.90)
+        task.wait(0.5)
+        local machine = findMachine("Jungle Squat Rack") or findMachine("Squat Rack")
+        if machine and machine:FindFirstChild("interactSeat") then
+            local retryCount = 0
+            repeat
+                task.wait(0.2)
+                pressE()
+                retryCount = retryCount + 1
+            until (player.Character and player.Character.Humanoid.Sit) or retryCount > 10
+        end
+    end
+end)
+
+tabFarming:AddLabel("Useful Features").TextSize = 23
+
+tabFarming:AddSwitch("Auto Eat Protein Egg", function(state)
+    autoEatEnabled = state
+    if state then
+        task.spawn(function()
+            while autoEatEnabled do
+                local egg = player.Backpack:FindFirstChild("Protein Egg")
+                if egg then
+                    egg.Parent = player.Character
+                    pcall(function() egg:Activate() end)
+                end
+                task.wait(1800)
+            end
+        end)
+    end
+end)
+
+tabFarming:AddSwitch("Lock Position", function(state)
+    if state then
+        local currentPos = player.Character.HumanoidRootPart.CFrame
+        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function()
+            if player.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CFrame = currentPos
+            end
+        end)
+    else
+        if getgenv().posLock then
+            getgenv().posLock:Disconnect()
+            getgenv().posLock = nil
+        end
+    end
+end)
+
+tabFarming:AddLabel("Performance").TextSize = 23
 
 tabFarming:AddButton("Full FPS Boost", function()
     local lighting = game:GetService("Lighting")
