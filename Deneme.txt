@@ -89,9 +89,9 @@ task.spawn(function()
     end
 end)
 
-tabFarming:AddLabel("Pack Farm (Rebirth Mode)").TextSize = 23
+tabFarming:AddLabel("👀 Pack Farm Rebirth").TextSize = 21
 
-tabFarming:AddSwitch("Auto Rebirth Farm", function(bool)
+tabFarming:AddSwitch("🔄 Auto Rebirth Farm", function(bool)
     isRunning = bool
     if not bool then return end
     task.spawn(function()
@@ -134,9 +134,9 @@ tabFarming:AddSwitch("Auto Rebirth Farm", function(bool)
     end)
 end)
 
-tabFarming:AddLabel("Fast Strength (Power Mode)").TextSize = 23
+tabFarming:AddLabel("💪 Fast Strength").TextSize = 21
 
-tabFarming:AddSwitch("Auto Strength Farm", function(bool)
+tabFarming:AddSwitch("💢 Auto Strength Farm", function(bool)
     strengthOnly = bool
     if not bool then return end
     task.spawn(function()
@@ -152,7 +152,7 @@ tabFarming:AddSwitch("Auto Strength Farm", function(bool)
     end)
 end)
 
-tabFarming:AddButton("Teleport & Sit Jungle Lift", function()
+tabFarming:AddButton("🏋️‍♂️ Jungle Lift", function()
     local character = player.Character
     if character and character:FindFirstChild("HumanoidRootPart") then
         character.HumanoidRootPart.CFrame = CFrame.new(-8666, 34, 2070)
@@ -169,7 +169,7 @@ tabFarming:AddButton("Teleport & Sit Jungle Lift", function()
     end
 end)
 
-tabFarming:AddButton("Teleport & Sit Auto Squat", function()
+tabFarming:AddButton("🦵 Jungle Squat", function()
     local character = player.Character
     if character and character:FindFirstChild("HumanoidRootPart") then
         character.HumanoidRootPart.CFrame = CFrame.new(-8377.55, 48.71, 2864.90)
@@ -188,7 +188,7 @@ end)
 
 tabFarming:AddLabel("Useful Features").TextSize = 23
 
-tabFarming:AddSwitch("Auto Eat Protein Egg", function(state)
+tabFarming:AddSwitch("🥚 Auto Eat Egg (30 Min)", function(state)
     autoEatEnabled = state
     if state then
         task.spawn(function()
@@ -204,7 +204,7 @@ tabFarming:AddSwitch("Auto Eat Protein Egg", function(state)
     end
 end)
 
-tabFarming:AddSwitch("Lock Position", function(state)
+tabFarming:AddSwitch("📌 Lock Position", function(state)
     if state then
         local currentPos = player.Character.HumanoidRootPart.CFrame
         getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function()
@@ -220,9 +220,9 @@ tabFarming:AddSwitch("Lock Position", function(state)
     end
 end)
 
-tabFarming:AddLabel("Performance").TextSize = 23
+tabFarming:AddLabel("👾 Performance").TextSize = 21
 
-tabFarming:AddButton("Full FPS Boost", function()
+tabFarming:AddButton("🏴 Full FPS Boost", function()
     local lighting = game:GetService("Lighting")
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("ParticleEmitter") or obj:IsA("PointLight") or obj:IsA("SpotLight") then
@@ -234,7 +234,7 @@ tabFarming:AddButton("Full FPS Boost", function()
     for _, v in pairs(lighting:GetChildren()) do if v:IsA("Sky") then v:Destroy() end end
 end)
 
-tabFarming:AddSwitch("Hide UI Frames", function(state)
+tabFarming:AddSwitch("👁️‍🗨️ Hide All Frames", function(state)
     for _, obj in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
         if obj.Name:match("Frame$") then obj.Visible = not state end
     end
