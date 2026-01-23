@@ -27,6 +27,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VIM = game:GetService("VirtualInputManager")
 local isRunning = false
 local autoEatEnabled = false
+local working = false
 
 local function pressE()
     VIM:SendKeyEvent(true, "E", false, game)
@@ -71,7 +72,7 @@ local function findMachine(machineName)
     return machine
 end
 
-tabFarming:AddLabel("Fast Farming").TextSize = 23
+tabFarming:AddLabel("Main Farming").TextSize = 23
 
 tabFarming:AddSwitch("Pack Farm (3600-4000 CPS)", function(bool)
     isRunning = bool
@@ -129,25 +130,56 @@ tabFarming:AddSwitch("Pack Farm (3600-4000 CPS)", function(bool)
     end
 end)
 
-tabFarming:AddLabel("Stats & Info").TextSize = 23
-local footerTimeLabel = tabFarming:AddLabel("0d 0h 0m 0s")
-local footerRebirthsLabel = tabFarming:AddLabel("Rebirths: 0")
-local startTime = tick()
+tabFarming:AddLabel("Manual Farm").TextSize = 23
 
-task.spawn(function()
-    while true do
-        local elapsed = tick() - startTime
-        local d = math.floor(elapsed / 86400)
-        local h = math.floor((elapsed % 86400) / 3600)
-        local m = math.floor((elapsed % 3600) / 60)
-        local s = math.floor(elapsed % 60)
-        footerTimeLabel.Text = string.format("%dd %dh %dm %ds", d, h, m, s)
-        footerRebirthsLabel.Text = "Rebirths: " .. (player.leaderstats:FindFirstChild("Rebirths") and player.leaderstats.Rebirths.Value or 0)
-        task.wait(1)
+tabFarming:AddButton("Auto Lift (Start/Stop)", function()
+    working = not working
+    if working then
+        task.spawn(function()
+            while working do
+                for i = 1, 10 do
+                    player.muscleEvent:FireServer("rep")
+                end
+                task.wait()
+            end
+        end)
     end
 end)
 
-tabFarming:AddLabel("Settings").TextSize = 23
+tabFarming:AddSwitch("Jungle Lift (Auto Teleport)", function(bool)
+    working = bool
+    if bool then
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(-8666, 34, 2070)
+            task.wait(0.1)
+            pressE()
+            task.spawn(function()
+                while working do
+                    for i = 1, 10 do
+                        player.muscleEvent:FireServer("rep")
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end
+end)
+
+tabFarming:AddSwitch("Lock Position", function(Value)
+    if Value then
+        local currentPos = player.Character.HumanoidRootPart.CFrame
+        getgenv().posLock = game:GetService("RunService").Heartbeat:Connect(function()
+            if player.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CFrame = currentPos
+            end
+        end)
+    else
+        if getgenv().posLock then getgenv().posLock:Disconnect() getgenv().posLock = nil end
+    end
+end)
+
+tabFarming:AddLabel("Useful Settings").TextSize = 23
 
 tabFarming:AddSwitch("Auto Eat Protein Egg", function(state)
     autoEatEnabled = state
@@ -176,5 +208,29 @@ tabFarming:AddButton("Full Optimization", function()
     game:GetService("Lighting").Brightness = 0
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("ParticleEmitter") or obj:IsA("Light") then obj:Destroy() end
+    end
+end)
+
+tabFarming:AddSwitch("Hide All Frames", function(bool)
+    for _, obj in pairs(ReplicatedStorage:GetChildren()) do
+        if obj.Name:match("Frame$") then obj.Visible = not bool end
+    end
+end)
+
+tabFarming:AddLabel("Stats").TextSize = 23
+local footerTimeLabel = tabFarming:AddLabel("0d 0h 0m 0s")
+local footerRebirthsLabel = tabFarming:AddLabel("Rebirths: 0")
+local startTime = tick()
+
+task.spawn(function()
+    while true do
+        local elapsed = tick() - startTime
+        local d = math.floor(elapsed / 86400)
+        local h = math.floor((elapsed % 86400) / 3600)
+        local m = math.floor((elapsed % 3600) / 60)
+        local s = math.floor(elapsed % 60)
+        footerTimeLabel.Text = string.format("%dd %dh %dm %ds", d, h, m, s)
+        footerRebirthsLabel.Text = "Rebirths: " .. (player.leaderstats:FindFirstChild("Rebirths") and player.leaderstats.Rebirths.Value or 0)
+        task.wait(1)
     end
 end)
