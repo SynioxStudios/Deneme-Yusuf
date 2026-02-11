@@ -1,4 +1,4 @@
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/SynioxStudios/ByYusufGui-Syniox/refs/heads/main/SynioxGui.lua%20(3).txt", true))()
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/SynioxStudios/ByYusufGui-Syniox/refs/heads/main/SynioxGui.txt", true))()
 local displayName = game.Players.LocalPlayer.DisplayName
 
 local window = library:AddWindow("Deneme -1|| HELLO - ".. displayName, {
